@@ -33,18 +33,21 @@ async function fetchLinks(url, query) {
 
   return nodes.map((node) => {
     const url = new URL('https:' + '//' + willhabenURL.host + node.value);
-   // console.log(node.value);
     return url.origin + url.pathname;
   });
 }
 
 async function start() {
-  console.log("Start checking link " + WILLHABEN_URL)
+  console.log("Willhaben URL: " + WILLHABEN_URL)
   const linkCache = await fetchLinks(WILLHABEN_URL, XPATH_QUERY);
 
   setInterval(async () => {
     //console.log('check for new links');
     const newLinks = await fetchLinks(WILLHABEN_URL, XPATH_QUERY);
+    if (newLinks.length == 0) {
+      console.log('Es wurden keine Ergebnisse gefunden.');
+    }
+    
     newLinks.forEach((newLink) => {
       if (!linkCache.includes(newLink)) {
         linkCache.push(newLink);
