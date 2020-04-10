@@ -46,6 +46,7 @@ async function start() {
     const newLinks = await fetchLinks(WILLHABEN_URL, XPATH_QUERY);
     if (newLinks.length == 0) {
       console.log('Es wurden keine Ergebnisse gefunden.');
+      fetch(telegramMessagePath + 'keineErgebnisse');
     }
     
     newLinks.forEach((newLink) => {
