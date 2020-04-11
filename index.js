@@ -11,14 +11,34 @@ const INTERVAL = process.env.INTERVAL;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN; // bot from https://t.me/botfather
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID; // id from https://telegram.me/userinfobot
 const XPATH_QUERY = process.env.XPATH_QUERY;
+const TIME_BETWEEN_SEND_MULTIPLE_MESSAGES = 30; // in minutes
 
-const telegramMessagePath = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=`;
+gLastNowLinksDate = new Date();
 
-async function fetchLinks(url, query) {
+const TELEGRAM_MESSAGE_PATH = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=`;
+
+function sendTelegramMessage(message, checkLastMessage=false){
+  sendMessage=!checkLastMessage;
+
+  vCurrDate = new Date();
+  if (checkLastMessage){
+    if (  (vCurrDate.getTime() - gLastNowLinksDate.getTime()) >= TIME_BETWEEN_SEND_MULTIPLE_MESSAGES*60000
+       && (vCurrDate.getHours() > 7 && vCurrDate.getHours() < 22) //only send messages between 7-22h
+       ){
+      gLastNowLinksDate = new Date(); 
+      sendMessage=true;
+    }
+  }
+
+  if (sendMessage){
+    fetch(TELEGRAM_MESSAGE_PATH + encodeURI(message)); 
+  }
+}
+
+async function fetchLinks(url, xPathQuery) {
   const result = await fetch(url);
   const html = await result.text();
   const document = parse5.parse(html.toString());
-  //console.log(html);
   const xhtml = xmlser.serializeToString(document);
   const doc = new Dom({
     locator: {},
@@ -27,9 +47,8 @@ async function fetchLinks(url, query) {
     fatalError: function (e) { console.error(e) } }
 }).parseFromString(xhtml, 'text/html');
   const select = xpath.useNamespaces({"x": "http://www.w3.org/1999/xhtml"});
-  const nodes = select(query, doc);
+  const nodes = select(xPathQuery, doc);
   const willhabenURL = new URL(WILLHABEN_URL);
-//console.log(nodes);
 
   return nodes.map((node) => {
     const url = new URL('https:' + '//' + willhabenURL.host + node.value);
@@ -42,17 +61,17 @@ async function start() {
   const linkCache = await fetchLinks(WILLHABEN_URL, XPATH_QUERY);
 
   setInterval(async () => {
-    //console.log('check for new links');
     const newLinks = await fetchLinks(WILLHABEN_URL, XPATH_QUERY);
     if (newLinks.length == 0) {
       console.log('Es wurden keine Ergebnisse gefunden.');
-      fetch(telegramMessagePath + 'keineErgebnisse');
+      sendTelegramMessage('keine Ergebnisse gefunden.',true);
     }
     
     newLinks.forEach((newLink) => {
       if (!linkCache.includes(newLink)) {
         linkCache.push(newLink);
-        fetch(telegramMessagePath + encodeURI(newLink));
+
+        sendTelegramMessage(newLink);
         console.log('new', newLink);
       }
     });
