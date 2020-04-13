@@ -3,14 +3,15 @@ const parse5 = require('parse5');
 const xmlser = require('xmlserializer');
 const xpath = require('xpath');
 const Dom = require('xmldom').DOMParser;
+const config = require('./options.json');
 require('dotenv').config();
 require('log-timestamp');
 
-const WILLHABEN_URL = process.env.WILLHABEN_URL;
-const INTERVAL = process.env.INTERVAL;
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN; // bot from https://t.me/botfather
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID; // id from https://telegram.me/userinfobot
-const XPATH_QUERY = process.env.XPATH_QUERY;
+const WILLHABEN_URL = config.willhaben_url;
+const INTERVAL = config.interval;
+const TELEGRAM_TOKEN = config.telegram_token; // bot from https://t.me/botfather
+const TELEGRAM_CHAT_ID = config.telegram_chat_id; // id from https://telegram.me/userinfobot
+const XPATH_QUERY = config.xpath_query;
 const TIME_BETWEEN_SEND_MULTIPLE_MESSAGES = 30; // in minutes
 
 gLastNowLinksDate = new Date();
@@ -75,7 +76,7 @@ async function start() {
         console.log('new', newLink);
       }
     });
-  }, INTERVAL);
+  }, INTERVAL*1000);
 }
 
 start();
