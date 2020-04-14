@@ -3,7 +3,8 @@ const parse5 = require('parse5');
 const xmlser = require('xmlserializer');
 const xpath = require('xpath');
 const Dom = require('xmldom').DOMParser;
-const config = require('/data/options.json');
+try{config = require('/data/options.json');}catch (e) {config = require('./options.json');}; ///data/options for hassio
+
 require('dotenv').config();
 require('log-timestamp');
 
